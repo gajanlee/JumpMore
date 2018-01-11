@@ -10,7 +10,6 @@ def pull_screenshot():
     os.system("adb pull " + screenshot_loc + " .")
     return Image.open(screenshot_name)
 
-
 swipe_x1, swipe_y1, swipe_x2, swipe_y2 = 0, 0, 0, 0
 def get_swipe_button():
     while swipe_x1 == 0:
@@ -24,11 +23,37 @@ def set_swipe_button():
     swipe_x1, swipe_x2 = int(w / 2), int(w / 2)
     swipe_y1, swipe_y2 = int(1584 / 1920 * h), int(1584 / 1920 * h)
 
-def jump(img):
-    x1, x2, x3, x4 = get_swipe_button()
-    os.system("abs shell imput swipe {}")
 
-piece_body_width = 200
+
+press_coefficient = 1.70
+adjust = False
+
+def adjust_press_coefficient():
+    global adjust
+    if adjust:
+        return
+    res = input("far(1) or near(0)?")
+    global  press_coefficient
+    if res == "1":
+        press_coefficient = 0.90 * press_coefficient
+    elif res == "0":
+        press_coefficient = 1.10 * press_coefficient
+    elif res == "2":
+        adjust = True
+
+
+def jump(distance):
+    print(press_coefficient, distance)
+    x1, y1, x2, y2 = get_swipe_button()
+    press_time = int( max(distance * press_coefficient, 200))
+    cmd = "adb shell input swipe {x1} {y1} {x2} {y2} {duration}".format(
+        x1 = x1, y1 = y1, x2 = x2, y2 = y2,
+        duration = press_time
+    )
+    os.system(cmd)
+    print(cmd)
+
+piece_body_width = 70
 
 def find_points_in_board(img):
     w, h = img.size
@@ -69,7 +94,6 @@ def find_points_in_board(img):
     board_x_sum = 0
     board_x_c = 0
     board_x = 0
-    board_y = 0
     for i in range(scan_y, int(h * 2 / 3)):
         last_pixel = img_pixel[0, i]
         if board_x:
@@ -102,8 +126,6 @@ def find_points_in_board(img):
     board_y = int((i + k) / 2)
     draw.line((0, board_y, w, board_y), fill=(255, 0, 0), width=10)
     draw.line((board_x, 0, board_x, h), fill=(255, 0, 0), width=10)
-
-
     #draw.line((board_x, 0, board_x, h), fill=(255, 0, 0), width=10)
 
     last_pixel = img_pixel[board_x, i]
@@ -113,7 +135,7 @@ def find_points_in_board(img):
 
     del draw
     plt.imshow(img)
-    plt.show()
+    #plt.show()
     print(w, h)
     img.close()
     return piece_x, piece_y, board_x, board_y
@@ -137,4 +159,8 @@ def run():
     jump(distance(find_points_in_board(img)))
 
 if __name__ == "__main__":
-    run()
+    set_swipe_button()
+    while True:
+        run()
+        #adjust_press_coefficient()
+        time.sleep(random.uniform(1.2, 1.5))
