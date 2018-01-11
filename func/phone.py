@@ -17,6 +17,7 @@ def get_swipe_button():
     return swipe_x1, swipe_y1, swipe_x2, swipe_y2
 
 def set_swipe_button():
+    screenshot()
     global swipe_x1, swipe_y1, swipe_x2, swipe_y2
     img = pull_screenshot()
     w, h = img.size
@@ -43,12 +44,16 @@ def adjust_press_coefficient():
 
 
 def jump(distance):
-    print(press_coefficient, distance)
+    head_diameter = 60
     x1, y1, x2, y2 = get_swipe_button()
-    press_time = int( max(distance * press_coefficient, 200))
+    scale = 0.945 * 2 / head_diameter
+    actual_distance = distance * scale * (math.sqrt(6) / 2)
+    press_time = (-945 + math.sqrt(945 ** 2 + 4 * 105 * 36 * actual_distance)) / (2 * 105) * 1000
+
+    # press_time = int( max(distance * press_coefficient, 200))
     cmd = "adb shell input swipe {x1} {y1} {x2} {y2} {duration}".format(
-        x1 = x1, y1 = y1, x2 = x2, y2 = y2,
-        duration = press_time
+        x1 = x1 + random.uniform(-50, 50), y1 = y1 + + random.uniform(10, 50), x2 = x2 + + random.uniform(10, 50), y2 = y2 + random.uniform(10, 50),
+        duration = int(press_time)
     )
     os.system(cmd)
     print(cmd)
